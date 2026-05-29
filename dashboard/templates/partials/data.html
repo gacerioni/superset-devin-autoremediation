@@ -1,0 +1,146 @@
+{# Live-updating partial: tiles + sessions table + events log #}
+
+{# ============================ TILES (8) ============================ #}
+<section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3">
+  {% set tiles = [
+    {'label':'Sessions',        'value': total,                 'sub': '', 'accent':'teal'},
+    {'label':'In-flight',       'value': running,               'sub': 'queued + running', 'accent':'sky'},
+    {'label':'PRs opened',      'value': pr_count,              'sub': 'by Devin', 'accent':'emerald'},
+    {'label':'Success rate',    'value': success_rate ~ '%',    'sub': 'completed / total', 'accent':'teal'},
+    {'label':'Eng-hours saved', 'value': eng_hours ~ 'h',       'sub': '2h × PR (est.)', 'accent':'amber'},
+    {'label':'ACUs burned',     'value': '%.2f' % acu_total,    'sub': '15 min / ACU', 'accent':'sky'},
+    {'label':'ACU $ spent',     'value': '$' ~ ('%.2f' % acu_spent), 'sub': '≈ $2.25 / ACU', 'accent':'amber'},
+    {'label':'Net $ saved',     'value': '$' ~ cost_saved,      'sub': 'human cost − ACU spend', 'accent':'emerald'},
+  ] %}
+  {% for t in tiles %}
+    {% set ring = {'teal':'ring-devin-teal/20','sky':'ring-sky-500/20','emerald':'ring-emerald-500/20','amber':'ring-devin-amber/20'}[t.accent] %}
+    {% set vcol = {'teal':'text-devin-teal','sky':'text-sky-300','emerald':'text-emerald-300','amber':'text-devin-amber'}[t.accent] %}
+    <div class="rounded-xl border border-white/10 bg-ink-900/70 hover:bg-ink-800/70 transition px-4 py-3 ring-1 {{ ring }} shadow-soft">
+      <div class="text-[10px] uppercase tracking-wider text-slate-400">{{ t.label }}</div>
+      <div class="text-2xl font-extrabold {{ vcol }} leading-tight mt-0.5">{{ t.value }}</div>
+      {% if t.sub %}<div class="text-[10px] text-slate-500 mt-1">{{ t.sub }}</div>{% endif %}
+    </div>
+  {% endfor %}
+</section>
+
+{# ============================ SESSIONS TABLE ============================ #}
+<section class="mt-6">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-base font-semibold text-slate-100 flex items-center gap-2">
+      <span class="ico w-4 h-4 text-devin-teal" style="-webkit-mask-image:url('/static/icons/layers.svg'); mask-image:url('/static/icons/layers.svg');"></span>
+      Remediation sessions
+    </h2>
+    <div class="text-xs text-slate-500">{{ total }} total · {{ running }} in-flight</div>
+  </div>
+
+  <div class="rounded-xl border border-white/10 bg-ink-900/60 overflow-hidden">
+    {% if sessions|length == 0 %}
+      <div class="px-6 py-10 text-center text-slate-400 text-sm">
+        No sessions yet. Trigger one with <code class="font-mono text-slate-200">make trigger</code>
+        or <code class="font-mono text-slate-200">POST /trigger/demo</code>.
+      </div>
+    {% else %}
+    <div class="overflow-x-auto scrollbar-thin">
+      <table class="w-full text-sm table-dark">
+        <thead class="text-[11px] uppercase tracking-wider text-slate-400">
+          <tr>
+            <th class="text-left font-medium px-4 py-2.5">Title</th>
+            <th class="text-left font-medium px-3 py-2.5">CVE</th>
+            <th class="text-left font-medium px-3 py-2.5">Package</th>
+            <th class="text-left font-medium px-3 py-2.5">Sev</th>
+            <th class="text-left font-medium px-3 py-2.5">Status</th>
+            <th class="text-left font-medium px-3 py-2.5">Outcome</th>
+            <th class="text-right font-medium px-3 py-2.5">ACU</th>
+            <th class="text-left font-medium px-3 py-2.5">PR</th>
+            <th class="text-left font-medium px-3 py-2.5">Devin</th>
+            <th class="text-left font-medium px-3 py-2.5">Owner</th>
+            <th class="text-left font-medium px-4 py-2.5">Started</th>
+            <th class="text-right font-medium px-3 py-2.5">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5">
+        {% for s in sessions %}
+          <tr class="hover:bg-white/[0.03]">
+            <td class="px-4 py-2.5 align-top">
+              <div class="text-slate-100 font-medium leading-snug">{{ s.title|default('—', true) }}</div>
+              <div class="text-[11px] text-slate-500 font-mono mt-0.5">{{ short_id(s.session_id, 22) }}</div>
+            </td>
+            <td class="px-3 py-2.5 align-top text-slate-300 font-mono text-xs">{{ s.cve_id or '—' }}</td>
+            <td class="px-3 py-2.5 align-top text-slate-300 font-mono text-xs">{{ s.package or '—' }}</td>
+            <td class="px-3 py-2.5 align-top">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md border text-[10px] font-bold {{ severity_class(s.severity) }}">{{ severity_label(s.severity) }}</span>
+            </td>
+            <td class="px-3 py-2.5 align-top">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md border text-[10px] font-bold uppercase {{ status_class(s.status) }}">{{ s.status }}</span>
+            </td>
+            <td class="px-3 py-2.5 align-top text-xs font-medium {{ outcome_class(s.outcome) }}">{{ s.outcome or '—' }}</td>
+            <td class="px-3 py-2.5 align-top text-right text-slate-300 font-mono text-xs">{{ '%.2f' % (s.acu_used or 0) }}</td>
+            <td class="px-3 py-2.5 align-top text-xs">
+              {% if s.pr_url %}
+                <a href="{{ s.pr_url }}" target="_blank" class="text-devin-blue hover:text-devin-teal font-mono">{{ pr_short(s.pr_url) }}</a>
+              {% else %}—{% endif %}
+            </td>
+            <td class="px-3 py-2.5 align-top text-xs">
+              {% if s.devin_session_url %}
+                <a href="{{ s.devin_session_url }}" target="_blank" class="text-devin-teal hover:text-devin-blue inline-flex items-center gap-1">
+                  open
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3 h-3"><path d="M7 17 17 7M7 7h10v10"/></svg>
+                </a>
+              {% else %}—{% endif %}
+            </td>
+            <td class="px-3 py-2.5 align-top">
+              <span class="inline-flex items-center gap-1.5 text-xs text-slate-300">
+                <img src="/static/gabriel-avatar.png" class="w-4 h-4 rounded-full"/>
+                {{ s.owner or '—' }}
+              </span>
+            </td>
+            <td class="px-4 py-2.5 align-top text-slate-400 font-mono text-[11px] whitespace-nowrap">{{ format_started(s.started_at) }}</td>
+            <td class="px-3 py-2.5 align-top text-right">
+              {% if s.status in ['queued', 'running', 'blocked'] and s.pollable %}
+                <button onclick="cancelSession('{{ s.session_id }}')"
+                        class="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-red-500/40 bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs">
+                  <span class="ico w-3 h-3" style="-webkit-mask-image:url('/static/icons/x-circle.svg'); mask-image:url('/static/icons/x-circle.svg');"></span>
+                  Cancel
+                </button>
+              {% else %}
+                <span class="text-slate-700">—</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{# ============================ EVENTS LOG ============================ #}
+<section class="mt-6">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-base font-semibold text-slate-100 flex items-center gap-2">
+      <span class="ico w-4 h-4 text-devin-blue" style="-webkit-mask-image:url('/static/icons/radio-tower.svg'); mask-image:url('/static/icons/radio-tower.svg');"></span>
+      Live event log
+    </h2>
+    <div class="text-xs text-slate-500">{{ events|length }} most recent</div>
+  </div>
+
+  <div class="rounded-xl border border-white/10 bg-ink-900/60 overflow-hidden">
+    {% if events|length == 0 %}
+      <div class="px-6 py-8 text-center text-slate-400 text-sm">(no events yet)</div>
+    {% else %}
+    <div class="max-h-72 overflow-y-auto scrollbar-thin divide-y divide-white/5">
+      {% for e in events %}
+      <div class="px-4 py-2 flex items-center gap-3 text-xs font-mono">
+        <span class="text-slate-500 whitespace-nowrap">{{ (e.timestamp or '')[:19].replace('T', ' ') }}</span>
+        <span class="text-slate-400 truncate max-w-[140px]">{{ short_id(e.session_id, 16) }}</span>
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-devin-teal/10 border border-devin-teal/30 text-devin-teal text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap">
+          {{ e.event }}
+        </span>
+        <span class="text-slate-400 truncate">{{ e.payload|tojson if e.payload is mapping else (e.payload|string)[:120] }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</section>

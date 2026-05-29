@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="min-h-screen">
+
+  {# ============================ TOP BAR ============================ #}
+  <header class="border-b border-white/5 backdrop-blur sticky top-0 z-30 bg-ink-950/70">
+    <div class="max-w-[1440px] mx-auto px-6 py-3 flex items-center justify-between gap-6">
+      {# LEFT: product name + breadcrumbs #}
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-ink-800 ring-1 ring-devin-teal/40 shadow-glow-teal flex items-center justify-center overflow-hidden flex-shrink-0">
+          <img src="/static/logo.png" alt="Devin" class="w-9 h-9 object-contain"/>
+        </div>
+        <div class="min-w-0">
+          <div class="text-sm text-slate-400 leading-tight flex items-center gap-2">
+            <span>Devin Cloud</span>
+            <span class="text-slate-600">/</span>
+            <span class="text-slate-300">Automations</span>
+            <span class="text-slate-600">/</span>
+            <span class="text-slate-100 font-medium truncate">superset-auto-remediation</span>
+          </div>
+          <div class="text-[11px] text-slate-500 mt-0.5 font-mono truncate">
+            org: <span class="text-slate-400">{{ devin_org_id_short or "org-…" }}</span>
+            · env: <span class="text-devin-amber">{{ app_env }}</span>
+          </div>
+        </div>
+      </div>
+
+      {# RIGHT: status + user #}
+      <div class="flex items-center gap-3">
+        <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-xs font-medium">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-dot text-emerald-400"></span>
+          system healthy
+        </div>
+        <div class="flex items-center gap-3 pl-3 border-l border-white/10">
+          <div class="text-right hidden sm:block">
+            <div class="text-sm text-slate-100 font-semibold leading-tight">Gabriel Cerioni</div>
+            <div class="text-[11px] text-slate-500">gabriel.cerioni@redis.com · owner</div>
+          </div>
+          <img src="/static/gabriel-avatar.png"
+               class="w-9 h-9 rounded-full ring-2 ring-devin-teal/50 ring-offset-2 ring-offset-ink-950 object-cover"
+               alt="Gabriel"/>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1440px] mx-auto px-6 py-6 space-y-6">
+
+    {# ============================ HERO ============================ #}
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 rounded-2xl border border-white/10 bg-gradient-to-br from-ink-800/80 to-ink-900/80 p-6 shadow-soft">
+        <div class="flex items-start gap-5">
+          <div class="w-16 h-16 rounded-2xl bg-ink-900 ring-1 ring-devin-teal/40 shadow-glow-teal flex items-center justify-center flex-shrink-0">
+            <span class="ico w-8 h-8 text-devin-teal" style="-webkit-mask-image:url('/static/icons/shield-check.svg'); mask-image:url('/static/icons/shield-check.svg');"></span>
+          </div>
+          <div class="min-w-0">
+            <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight gradient-text leading-tight">
+              Superset Auto-Remediation
+            </h1>
+            <p class="text-slate-300 mt-2 text-sm md:text-base">
+              Event-driven dependency-CVE remediation pipeline.
+            </p>
+            <p class="text-slate-300 mt-1 text-sm md:text-base">
+              CI finds the vulnerabilities. Devin reads the changelog, adapts breaking changes, and ships the PR.
+            </p>
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-devin-teal bg-devin-teal/10 border border-devin-teal/40">
+                <span class="w-1.5 h-1.5 rounded-full bg-devin-teal"></span> powered by Devin
+              </span>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-devin-amber bg-devin-amber/10 border border-devin-amber/40">
+                <span class="w-1.5 h-1.5 rounded-full bg-devin-amber"></span> {{ app_env }}
+              </span>
+              <a href="https://github.com/{{ github_repo }}" target="_blank"
+                 class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-devin-blue bg-devin-blue/10 border border-devin-blue/40 hover:bg-devin-blue/20 transition">
+                <span class="ico w-3 h-3" style="-webkit-mask-image:url('/static/icons/apachesuperset.svg'); mask-image:url('/static/icons/apachesuperset.svg');"></span>
+                {{ github_repo }}
+              </a>
+              <a href="https://app.devin.ai/sessions" target="_blank"
+                 class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-slate-200 bg-white/5 border border-white/15 hover:bg-white/10 transition">
+                live sessions
+                <svg viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M4.22 4.22a.75.75 0 011.06 0L11 9.94V6.5a.75.75 0 011.5 0V12a.75.75 0 01-.75.75H6.25a.75.75 0 010-1.5h3.44L4.22 5.28a.75.75 0 010-1.06z" clip-rule="evenodd" transform="rotate(-90 8 8)"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# Right column: "operator" snapshot card #}
+      <div class="rounded-2xl border border-white/10 bg-ink-900/70 p-5 shadow-soft">
+        <div class="text-xs uppercase tracking-wider text-slate-400 mb-3">Operator</div>
+        <div class="flex items-center gap-3">
+          <img src="/static/gabriel-avatar.png" class="w-12 h-12 rounded-full ring-2 ring-devin-teal/50 object-cover"/>
+          <div class="min-w-0">
+            <div class="text-slate-100 font-semibold truncate">Gabriel Cerioni</div>
+            <div class="text-xs text-slate-400 truncate">Forward Deployed · Redis</div>
+          </div>
+        </div>
+        <div class="mt-4 space-y-2 text-xs">
+          <div class="flex justify-between gap-3 text-slate-300">
+            <span class="text-slate-500">Devin org</span>
+            <span class="font-mono text-slate-200 truncate">{{ devin_org_id_short or "org-…" }}</span>
+          </div>
+          <div class="flex justify-between gap-3 text-slate-300">
+            <span class="text-slate-500">Plan</span>
+            <span>Pro (trial)</span>
+          </div>
+          <div class="flex justify-between gap-3 text-slate-300">
+            <span class="text-slate-500">Target repo</span>
+            <a href="https://github.com/{{ github_repo }}" target="_blank" class="text-devin-blue hover:underline truncate">{{ github_repo }}</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# ======================== QUICK LINKS ======================== #}
+    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      {% set links = [
+        {'href': 'https://github.com/gacerioni', 'icon': 'github.svg', 'iconBg': 'bg-white/5 text-white', 'label': 'GitHub', 'desc': 'gacerioni · profile'},
+        {'href': 'https://github.com/' ~ github_repo, 'icon': 'apachesuperset.svg', 'iconBg': 'bg-devin-blue/10 text-devin-blue', 'label': 'Superset fork', 'desc': 'issues & PRs land here'},
+        {'href': 'https://app.devin.ai/sessions', 'icon': '', 'iconBg': 'bg-devin-teal/10 text-devin-teal', 'label': 'Devin panel', 'desc': 'app.devin.ai · live'},
+        {'href': 'https://www.linkedin.com/in/gabriel-cerioni/', 'icon': 'linkedin.svg', 'iconBg': 'bg-[#0a66c2]/15 text-[#5da9ff]', 'label': 'LinkedIn', 'desc': 'Gabriel Cerioni'},
+        {'href': 'https://app.redislabs.com/', 'icon': 'redis.svg', 'iconBg': 'bg-red-500/10 text-red-400', 'label': 'Redis Cloud', 'desc': 'state + metrics'},
+      ] %}
+      {% for L in links %}
+      <a href="{{ L.href }}" target="_blank"
+         class="group rounded-xl border border-white/10 bg-ink-900/60 hover:bg-ink-800/80 hover:border-devin-teal/40 transition px-4 py-3 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg {{ L.iconBg }} flex items-center justify-center flex-shrink-0">
+          {% if L.icon %}
+            <span class="ico w-5 h-5" style="-webkit-mask-image:url('/static/icons/{{ L.icon }}'); mask-image:url('/static/icons/{{ L.icon }}');"></span>
+          {% else %}
+            <img src="/static/logo.png" class="w-6 h-6 object-contain"/>
+          {% endif %}
+        </div>
+        <div class="min-w-0">
+          <div class="text-sm text-slate-100 font-semibold leading-tight truncate group-hover:text-white">{{ L.label }}</div>
+          <div class="text-[11px] text-slate-500 leading-tight truncate">{{ L.desc }}</div>
+        </div>
+      </a>
+      {% endfor %}
+    </section>
+
+    {# ======================== PIPELINE TRIGGERS (3 paths, visual) ======================== #}
+    <section class="rounded-2xl border border-white/10 bg-ink-900/60 p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-base font-semibold text-slate-100 flex items-center gap-2">
+          <span class="ico w-4 h-4 text-devin-teal" style="-webkit-mask-image:url('/static/icons/radio-tower.svg'); mask-image:url('/static/icons/radio-tower.svg');"></span>
+          Pipeline triggers
+        </h2>
+        <div class="text-[11px] text-slate-500">Three entry points · same orchestrator · same Devin pipeline</div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {# Manual trigger #}
+        <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/[0.06] p-4">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-emerald-500/15 ring-1 ring-emerald-500/40 flex items-center justify-center text-emerald-300">
+              <span class="ico w-5 h-5" style="-webkit-mask-image:url('/static/icons/mouse-pointer-click.svg'); mask-image:url('/static/icons/mouse-pointer-click.svg');"></span>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-slate-100">Manual</div>
+              <div class="text-[10px] uppercase tracking-wider text-emerald-300/90">● active</div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 leading-snug mb-2">
+            Click <span class="text-slate-200">Run security scan</span> below.
+            Used during the demo for visual punch.
+          </p>
+          <div class="text-[10px] text-slate-500 font-mono truncate">POST /trigger/scan</div>
+        </div>
+
+        {# Webhook trigger #}
+        <div class="rounded-xl border border-devin-blue/30 bg-devin-blue/[0.06] p-4">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-devin-blue/15 ring-1 ring-devin-blue/40 flex items-center justify-center text-devin-blue">
+              <span class="ico w-5 h-5" style="-webkit-mask-image:url('/static/icons/webhook.svg'); mask-image:url('/static/icons/webhook.svg');"></span>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-slate-100">Webhook</div>
+              <div class="text-[10px] uppercase tracking-wider text-devin-blue/90">● ready</div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 leading-snug mb-2">
+            GitHub <code class="text-slate-200">issues:opened</code> +
+            <code class="text-slate-200">devin-remediate</code> label
+            → Devin dispatches.
+          </p>
+          <div class="text-[10px] text-slate-500 font-mono truncate">POST /webhook/github</div>
+        </div>
+
+        {# Scheduled trigger #}
+        <div class="rounded-xl border border-devin-amber/30 bg-devin-amber/[0.06] p-4">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 rounded-lg bg-devin-amber/15 ring-1 ring-devin-amber/40 flex items-center justify-center text-devin-amber">
+              <span class="ico w-5 h-5" style="-webkit-mask-image:url('/static/icons/calendar-clock.svg'); mask-image:url('/static/icons/calendar-clock.svg');"></span>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-slate-100">Scheduled</div>
+              <div class="text-[10px] uppercase tracking-wider text-devin-amber/90">○ configurable</div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 leading-snug mb-2">
+            Cron job runs the scanner periodically.
+            Default: <code class="text-slate-200">every 6h</code>.
+          </p>
+          <div class="text-[10px] text-slate-500 font-mono truncate">docker-compose · cron sidecar</div>
+        </div>
+      </div>
+
+      {# Flow line under the cards #}
+      <div class="mt-4 flex items-center gap-2 text-[11px] text-slate-500">
+        <span>any trigger</span>
+        <span class="flex-1 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent"></span>
+        <span class="px-2 py-0.5 rounded-md border border-white/15 bg-white/[0.04] text-slate-300">orchestrator</span>
+        <span class="flex-1 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent"></span>
+        <span class="px-2 py-0.5 rounded-md border border-devin-teal/40 bg-devin-teal/10 text-devin-teal flex items-center gap-1">
+          <span class="ico w-3 h-3" style="-webkit-mask-image:url('/static/icons/bot.svg'); mask-image:url('/static/icons/bot.svg');"></span>
+          Devin
+        </span>
+        <span class="flex-1 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent"></span>
+        <span class="text-slate-300">PR + comment</span>
+      </div>
+    </section>
+
+    {# ======================== CONTROL PANEL ======================== #}
+    <section class="rounded-2xl border border-white/10 bg-ink-900/60 p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-base font-semibold text-slate-100 flex items-center gap-2">
+          <span class="ico w-4 h-4 text-devin-teal" style="-webkit-mask-image:url('/static/icons/rocket.svg'); mask-image:url('/static/icons/rocket.svg');"></span>
+          Control panel
+        </h2>
+        <div id="control-status" class="text-xs text-slate-500 font-mono"></div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {# Run scan — primary action #}
+        <button onclick="postAction('/proxy/trigger/scan?dispatch=true&max_issues=1', 'Run security scan')"
+                class="group flex items-center gap-3 rounded-xl border border-devin-teal/40 bg-devin-teal/10 hover:bg-devin-teal/20 transition px-4 py-3">
+          <div class="w-9 h-9 rounded-lg bg-devin-teal text-ink-900 flex items-center justify-center">
+            <span class="ico w-5 h-5" style="-webkit-mask-image:url('/static/icons/shield-check.svg'); mask-image:url('/static/icons/shield-check.svg');"></span>
+          </div>
+          <div class="text-left">
+            <div class="text-sm font-semibold text-slate-100">Run security scan</div>
+            <div class="text-[11px] text-slate-400">pip-audit → issue → Devin</div>
+          </div>
+        </button>
+
+        {# Smoke #}
+        <button onclick="postAction('/proxy/trigger/smoke', 'Run smoke test')"
+                class="group flex items-center gap-3 rounded-xl border border-devin-amber/40 bg-devin-amber/10 hover:bg-devin-amber/20 transition px-4 py-3">
+          <div class="w-9 h-9 rounded-lg bg-devin-amber text-ink-900 flex items-center justify-center">
+            <span class="ico w-5 h-5" style="-webkit-mask-image:url('/static/icons/zap.svg'); mask-image:url('/static/icons/zap.svg');"></span>
+          </div>
+          <div class="text-left">
+            <div class="text-sm font-semibold text-slate-100">Smoke test Devin</div>
+            <div class="text-[11px] text-slate-400">~0 ACU · connectivity check</div>
+          </div>
+        </button>
+
+        {# Refresh poll #}
+        <button onclick="postAction('/proxy/poll/now', 'Force poll')"
+                class="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition px-4 py-3">
+          <div class="w-9 h-9 rounded-lg bg-white/10 text-slate-100 flex items-center justify-center">
+            <span class="ico w-5 h-5" style="-webkit-mask-image:url('/static/icons/refresh-cw.svg'); mask-image:url('/static/icons/refresh-cw.svg');"></span>
+          </div>
+          <div class="text-left">
+            <div class="text-sm font-semibold text-slate-100">Refresh from Devin</div>
+            <div class="text-[11px] text-slate-500">force a poll now</div>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    {# ======================== LIVE DATA REGION ======================== #}
+    <div id="live"
+         hx-get="/_partials/data"
+         hx-trigger="every {{ refresh_seconds }}s, refresh from:body"
+         hx-swap="innerHTML">
+      {% include "partials/data.html" %}
+    </div>
+
+    <script>
+      async function postAction(url, label) {
+        const status = document.getElementById('control-status');
+        status.textContent = `⏳ ${label}...`;
+        status.className = 'text-xs text-devin-amber font-mono animate-pulse';
+        try {
+          const r = await fetch(url, { method: 'POST' });
+          const j = await r.json();
+          if (r.ok) {
+            // Surface useful bits per endpoint shape
+            let extra = '';
+            if (j.session_id) extra = ` · session ${j.session_id.slice(0,12)}`;
+            if (j.new_issues_created !== undefined) extra = ` · ${j.new_issues_created} new issue(s), ${j.dispatched_sessions?.length||0} dispatched`;
+            if (j.updated !== undefined) extra = ` · ${j.updated} updated`;
+            status.textContent = `✓ ${label} done${extra}`;
+            status.className = 'text-xs text-emerald-300 font-mono';
+            console.log(label, j);
+            // Trigger an immediate refresh of the live region
+            htmx.trigger('#live', 'refresh');
+            if (j.devin_url) {
+              setTimeout(() => window.open(j.devin_url, '_blank'), 400);
+            }
+          } else {
+            status.textContent = `✗ ${label} failed (HTTP ${r.status}): ${JSON.stringify(j).slice(0,120)}`;
+            status.className = 'text-xs text-red-300 font-mono';
+          }
+        } catch (e) {
+          status.textContent = `✗ ${label} error: ${e.message}`;
+          status.className = 'text-xs text-red-300 font-mono';
+        }
+      }
+
+      async function cancelSession(sid) {
+        if (!confirm(`Cancel Devin session ${sid.slice(0,12)}…?`)) return;
+        const r = await fetch(`/proxy/sessions/${sid}`, { method: 'DELETE' });
+        const j = await r.json();
+        const status = document.getElementById('control-status');
+        if (r.ok) {
+          status.textContent = `✓ cancel sent for ${sid.slice(0,12)}`;
+          status.className = 'text-xs text-emerald-300 font-mono';
+          htmx.trigger('#live', 'refresh');
+        } else {
+          status.textContent = `✗ cancel failed: ${JSON.stringify(j).slice(0,120)}`;
+          status.className = 'text-xs text-red-300 font-mono';
+        }
+      }
+    </script>
+
+    {# ======================== FOOTER ======================== #}
+    <footer class="rounded-xl border border-white/10 bg-ink-900/50 px-4 py-3 text-xs text-slate-500 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        Auto-refresh every <span class="text-slate-300">{{ refresh_seconds }}s</span> ·
+        <span class="font-mono text-slate-400">{{ now_iso }}</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="{{ orchestrator_url }}/docs" target="_blank" class="hover:text-devin-teal">
+          <span class="font-mono">{{ orchestrator_url }}/docs</span>
+        </a>
+        <span class="text-slate-700">·</span>
+        <a href="https://github.com/{{ github_repo }}" target="_blank" class="hover:text-devin-teal">fork: {{ github_repo }}</a>
+      </div>
+    </footer>
+  </main>
+</div>
+{% endblock %}

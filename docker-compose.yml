@@ -1,0 +1,47 @@
+services:
+  # Default: orchestrator + dashboard talk to Redis Cloud via REDIS_URL in .env.
+  # Spin up the optional local Redis Stack with:  docker compose --profile local-redis up
+  redis:
+    image: redis/redis-stack:7.4.0-v0
+    container_name: devin-demo-redis
+    profiles: ["local-redis"]
+    ports:
+      - "6379:6379"
+      - "8001:8001"  # RedisInsight UI
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  orchestrator:
+    build:
+      context: ./orchestrator
+    container_name: devin-demo-orchestrator
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    # REDIS_URL is inherited from .env (defaults to Redis Cloud).
+    # To use the local Redis Stack instead: REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./orchestrator/app:/app/app:ro
+      - ./scripts:/scripts:ro
+      - ./workspace:/workspace:ro
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+
+  dashboard:
+    build:
+      context: ./dashboard
+    container_name: devin-demo-dashboard
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    environment:
+      ORCHESTRATOR_URL: http://orchestrator:8080
+    volumes:
+      - ./dashboard/main.py:/app/main.py:ro
+      - ./dashboard/templates:/app/templates:ro
+      - ./dashboard/static:/app/static:ro
+    command: uvicorn main:app --host 0.0.0.0 --port 8501 --reload
