@@ -249,7 +249,7 @@ The `prompts.py` module is where each playbook lives.
 
 ## Built by
 
-[Gabriel Cerioni](https://www.linkedin.com/in/gabriel-cerioni/) · Forward Deployed Engineer · Redis
+[Gabriel Cerioni](https://www.linkedin.com/in/gabrielcerioni/) · Forward Deployed Engineer · Redis
 ([gacerioni on GitHub](https://github.com/gacerioni))
 
 ## License
