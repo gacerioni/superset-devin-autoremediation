@@ -35,4 +35,4 @@ build/
 .tmp/
 
 # ---- Personal / preparation material (kept out of public repo) ----
-LOOM_SCRIPT.md
+LOOM_SCRIPT*.md
